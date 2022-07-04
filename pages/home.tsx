@@ -11,7 +11,7 @@ import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import { Brazilian } from '../contracts'
-import { Deposit, MatchesDisplay, Withdrawn } from '../screens'
+import { Deposit, MatchesDisplay, MyBets, Withdrawn } from '../screens'
 
 const Home: NextPage = () => {
   const [screen, setScreen] = useState<string>('matches');
@@ -53,10 +53,14 @@ const Home: NextPage = () => {
     <div className={styles.container}>
       <div className={styles.row} style={{ justifyContent: 'space-between' }}>
         <p>{balance}  one</p>
-        <div className={styles.row} style={{ width: '60%', justifyContent: 'end', gap: 10 }}>
+        <div className={styles.row} style={{ width: '80%', justifyContent: 'end', gap: 10 }}>
           <Button
             onClick={() => { setScreen('matches') }}
             label='MATCHES'
+          />
+          <Button
+            onClick={() => { setScreen('mybets') }}
+            label='MY BETS'
           />
           <Button
             onClick={() => { setScreen('deposit') }}
@@ -73,6 +77,7 @@ const Home: NextPage = () => {
         </div>
       </div>
       {screen === 'matches' && <MatchesDisplay logout={logout} />}
+      {screen === 'mybets' && <MyBets logout={logout} />}
       {screen === 'deposit' && <Deposit logout={logout} />}
       {screen === 'withdrawn' && <Withdrawn logout={logout} />}
     </div>

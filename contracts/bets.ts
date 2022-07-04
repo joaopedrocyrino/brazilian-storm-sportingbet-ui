@@ -132,6 +132,48 @@ class Contract extends Base {
 
         await contract.claimGoalsBet(a, b, c, input, champId, matchId, betId)
     }
+
+    async getWinnerBet(
+        sharedSecret: bigint,
+        champId: number,
+        matchId: number,
+        betId: number
+    ): Promise<any> {
+        const contract = this.getContract()
+
+        const { value, ...bet } = await contract.getWinnerBet(champId, matchId, betId)
+
+        const decryptedValue = await this.decryptGroth(value.toBigInt(), sharedSecret)
+        return { ...bet, value: decryptedValue }
+    }
+
+    async getScoreBet(
+        sharedSecret: bigint,
+        champId: number,
+        matchId: number,
+        betId: number
+    ): Promise<any> {
+        const contract = this.getContract()
+
+        const { value, ...bet } = await contract.getScoreBet(champId, matchId, betId)
+
+        const decryptedValue = await this.decryptGroth(value.toBigInt(), sharedSecret)
+        return { ...bet, value: decryptedValue }
+    }
+
+    async getGoalsBet(
+        sharedSecret: bigint,
+        champId: number,
+        matchId: number,
+        betId: number
+    ): Promise<any> {
+        const contract = this.getContract()
+
+        const { value, ...bet } = await contract.getGoalsBet(champId, matchId, betId)
+
+        const decryptedValue = await this.decryptGroth(value.toBigInt(), sharedSecret)
+        return { ...bet, value: decryptedValue }
+    }
 }
 
 export default new Contract();

@@ -305,14 +305,14 @@ const MatchesDisplay: React.FC<{ logout: Function }> = ({ logout }) => {
                 </div>
                 <Button
                     label={`${match.house} scores`}
-                    onClick={() => { scoreBet() }}
+                    onClick={() => { goalBet(true) }}
                     variant='contained'
                     width={200}
                     height={35}
                 />
                 <Button
                     label={`${match.visitor} scores`}
-                    onClick={() => { scoreBet() }}
+                    onClick={() => { goalBet(false) }}
                     variant='contained'
                     width={200}
                     height={35}
