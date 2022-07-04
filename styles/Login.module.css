@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 20px;
+  gap: 30px;
 }
 
 .container p {
@@ -13,8 +13,8 @@
 }
 
 .inputWrapper {
-  width: 450px;
-  height: 45px;
+  width: 350px;
+  height: 40px;
 }
 
 @media (max-width: 500px) {

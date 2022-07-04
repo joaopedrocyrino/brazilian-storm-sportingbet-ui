@@ -3,16 +3,26 @@ import { useState } from 'react'
 import { useRouter } from 'next/router';
 
 import styles from '../styles/Home.module.css'
-import { Input } from '../components'
-import { useCryptoContext } from '../providers'
+import { Button } from '../components'
+import { useAlertContext } from '../providers'
 import { useEffect } from 'react';
 import { ethers } from 'ethers'
+import Card from '@mui/material/Card';
+import CardActions from '@mui/material/CardActions';
+import CardContent from '@mui/material/CardContent';
+import { Brazilian } from '../contracts'
+import { Deposit, MatchesDisplay, Withdrawn } from '../screens'
 
 const Home: NextPage = () => {
-  const [balance, setBalance] = useState<bigint>(0n);
-  const [matches, setmatches] = useState<any[]>([]);
-  const { getContract, decrypt } = useCryptoContext()
+  const [screen, setScreen] = useState<string>('matches');
+  const [balance, setBalance] = useState<string>('-');
+
   const router = useRouter()
+  const { notify } = useAlertContext()
+
+  const bet = async () => {
+
+  }
 
   const logout = () => {
     localStorage.removeItem('identityCommitment')
@@ -22,56 +32,57 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     const init = async () => {
-      const storedIdentityCommitment = localStorage.getItem('identityCommitment');
-      const storedIdentity = localStorage.getItem('identity');
+      try {
+        const storedIdentityCommitment = localStorage.getItem('identityCommitment');
+        const storedIdentity = localStorage.getItem('identity');
 
-      if (!storedIdentity || !storedIdentityCommitment) {
-        logout()
-        return
-      }
+        if (!storedIdentity || !storedIdentityCommitment) {
+          logout()
+          return
+        }
 
-      const contract = getContract()
+        const b = await Brazilian.getBalance(BigInt(storedIdentityCommitment), BigInt(storedIdentity))
 
-      const user = await contract.users(storedIdentityCommitment)
-      if (!user.isActive) {
-        logout()
-        return
-      }
-
-      const plaintext = await decrypt(BigInt(user.balance), BigInt(storedIdentity))
-
-      setBalance(plaintext)
-
-      const m = await contract.getMatches();
-
-      setmatches(m)
+        setBalance(ethers.utils.formatEther(b))
+      } catch (e: any) { notify(e.message, 'error') }
     }
     init()
-  }, [])
+  }, [screen])
 
   return (
     <div className={styles.container}>
       <div className={styles.row} style={{ justifyContent: 'space-between' }}>
-        <p>{ethers.utils.parseEther(balance.toString()).toString()} one</p>
-        <div className={styles.row} style={{ width: '50%', justifyContent: 'space-between' }}>
-          <p onClick={() => router.push('/deposit')} className={styles.link}>DEPOSIT</p>
-          <p onClick={() => router.push('/withdrawn')} className={styles.link}>WITHDRAWN</p>
-          <p onClick={logout} className={styles.logout}>LOG OUT</p>
+        <p>{balance}  one</p>
+        <div className={styles.row} style={{ width: '60%', justifyContent: 'end', gap: 10 }}>
+          <Button
+            onClick={() => { setScreen('matches') }}
+            label='MATCHES'
+          />
+          <Button
+            onClick={() => { setScreen('deposit') }}
+            label='DEPOSIT'
+          />
+          <Button
+            onClick={() => { setScreen('withdrawn') }}
+            label='WITHDRAWN'
+          />
+          <Button
+            onClick={() => { logout() }}
+            label='LOG OUT'
+          />
         </div>
       </div>
-      <div className={styles.content}>
-        {matches.map((match, i) => {
-          return (
-            <div className={styles.match} key={i}>
-              <p>{match.house}</p>
-              <p>{match.visitor}</p>
-              <p>{new Date(Number(match.limitTime)).toLocaleDateString()}</p>
-            </div>
-          )
-        })}
-      </div>
+      {screen === 'matches' && <MatchesDisplay logout={logout} />}
+      {screen === 'deposit' && <Deposit logout={logout} />}
+      {screen === 'withdrawn' && <Withdrawn logout={logout} />}
     </div>
   )
 }
+
+// Home.getInitialProps =async (ctx) => {
+//   const res = await fetch('https://api.github.com/repos/vercel/next.js')
+//   const json = await res.json()
+//   return { teamNames: json.stargazers_count }
+// }
 
 export default Home

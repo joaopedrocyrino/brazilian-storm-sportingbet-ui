@@ -1,28 +1,25 @@
 import React, { useState } from 'react';
+import { Button as MuiButton } from '@mui/material';
 
-import styles from './button.module.css'
 
 const Button: React.FC<{
     onClick: () => void | Promise<void>,
     label: string,
-    sec?: boolean,
-    width: number | string,
-    height: number | string,
-    loading: boolean
-}> = ({ label, onClick, sec, width, height, loading }) => {
-    const [isSec, setIsSec] = useState<boolean>(!!sec)
+    variant?: 'contained' | 'outlined',
+    width?: number | string,
+    height?: number | string,
+    loading?: boolean
+}> = ({ label, onClick, variant, width, height, loading }) => {
 
     return (
-        <button
-            onMouseEnter={() => setIsSec(!isSec)}
-            onMouseLeave={() => setIsSec(!isSec)}
-            className={`${styles.button} ${isSec ? styles.buttonSec : styles.buttonPrimary}`}
+        <MuiButton
             onClick={onClick}
-            style={{ width, height }}
+            variant={variant}
             disabled={loading}
+            style={{ width, height }}
         >
             {loading ? 'LOADING' : label}
-        </button>
+        </MuiButton>
     );
 }
 

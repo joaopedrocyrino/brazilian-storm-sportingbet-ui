@@ -71,7 +71,7 @@ export const buf2Bigint = (buf: ArrayBuffer | TypedArray | Buffer): bigint => {
   return ret;
 };
 
-export const poseidonHash = async (elements: any[]) => {
+export const poseidonHash = async (elements: any[]): Promise<bigint> => {
   const poseidon = await buildPoseidon();
   const F = poseidon.F;
 
