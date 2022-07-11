@@ -1,5 +1,7 @@
 import Base from './base';
 import ContractJson from '../artifacts/contracts/BrazilianStorm.sol/BrazilianStormSportingbet.json'
+const { buildEddsa } = require("circomlibjs");
+import { genEcdhSharedKey } from '../utils/encryption'
 
 const CONTRACT_ADDRESS = '0x5FC8d32690cc91D4c39d9d3abcBD16989F875707'
 
@@ -120,6 +122,11 @@ class Contract extends Base {
 
 
         return [new Uint8Array(firstKey), new Uint8Array(secondKey)];
+    }
+
+    async decrypt(cipher: bigint, sharedSecret: bigint): Promise<bigint> {
+        const plaintext = await this.decryptGroth(cipher, sharedSecret)
+        return plaintext
     }
 }
 

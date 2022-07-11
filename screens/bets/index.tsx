@@ -7,18 +7,27 @@ import {
 const { buildEddsa } = require("circomlibjs");
 
 import styles from './bets.module.css'
-import { Brazilian, Bets } from '../../contracts'
-import { Button, Input } from '../../components';
+import { Brazilian } from '../../contracts'
 import { Card, CardContent } from '@mui/material';
-import { genEcdhSharedKey, } from '../../utils/encryption'
+import { genEcdhSharedKey } from '../../utils/encryption'
 
 const myBetsQuery = gql`
-  query GetBets($better: String) {
-    getBets(input: { better: $better }) {
-      id
-      champId
-      matchId
-      betType
+  query GetBets($better: String!) {
+    bets(better: $better) {
+      winner {
+        value,
+        house
+      }
+      score {
+        value,
+        house
+        visitor
+      }
+      goals {
+        value
+        house
+        goals
+      }
     }
   }
 `;
@@ -51,18 +60,20 @@ const MyBets: React.FC<{ logout: Function }> = ({ logout }) => {
                     pubKey
                 })
 
-                await Promise.all(data.getBets.map(async (i: any) => {
-                    if (i.betType === 'goals') {
-                        const b = await Bets.getGoalsBet(sharedSecret, i.champId, i.matchId, i.id)
-                        setGoalsBets([...goalsBets, b])
-                    } else if (i.betType === 'score') {
-                        const b = await Bets.getScoreBet(sharedSecret, i.champId, i.matchId, i.id)
-                        setScoreBets([...scoreBets, b])
-                    } else {
-                        const b = await Bets.getWinnerBet(sharedSecret, i.champId, i.matchId, i.id)
-                        setWinnerBets([...winnerBets, b])
-                    }
-                }))
+                await Promise.all([
+                    Promise.all(data.bets.goals.map(async (b: any) => {
+                        const value = await Brazilian.decrypt(BigInt(b.value), sharedSecret)
+                        setGoalsBets([...goalsBets, { ...b, value }])
+                    })),
+                    Promise.all(data.bets.score.map(async (b: any) => {
+                        const value = await Brazilian.decrypt(BigInt(b.value), sharedSecret)
+                        setScoreBets([...scoreBets, { ...b, value }])
+                    })),
+                    Promise.all(data.bets.winner.map(async (b: any) => {
+                        const value = await Brazilian.decrypt(BigInt(b.value), sharedSecret)
+                        setWinnerBets([...winnerBets, { ...b, value }])
+                    }))
+                ])
             }
             getBetData()
         }
@@ -77,7 +88,7 @@ const MyBets: React.FC<{ logout: Function }> = ({ logout }) => {
                             <CardContent>
                                 <div className={styles.teams}>
                                     <p>house wins? {b.house}</p>
-                                    <p>value {b.value.toString()}</p>
+                                    <p>value {ethers.utils.formatEther(b.value.toString())}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -90,7 +101,7 @@ const MyBets: React.FC<{ logout: Function }> = ({ logout }) => {
                                 <div className={styles.teams}>
                                     <p>house goals {b.house}</p>
                                     <p>visitor goals {b.visitor}</p>
-                                    <p>value {b.value.toString()}</p>
+                                    <p>value {ethers.utils.formatEther(b.value.toString())}</p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -103,7 +114,7 @@ const MyBets: React.FC<{ logout: Function }> = ({ logout }) => {
                                 <div className={styles.teams}>
                                     <p>house? {b.house}</p>
                                     <p>goals {b.goals}</p>
-                                    <p>value {b.value.toString()}</p>
+                                    <p>value {ethers.utils.formatEther(b.value.toString())}</p>
                                 </div>
                             </CardContent>
                         </Card>

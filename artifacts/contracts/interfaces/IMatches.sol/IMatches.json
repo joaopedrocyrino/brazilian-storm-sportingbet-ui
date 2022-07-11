@@ -21,11 +21,6 @@
         {
           "components": [
             {
-              "internalType": "uint256",
-              "name": "id",
-              "type": "uint256"
-            },
-            {
               "internalType": "string",
               "name": "house",
               "type": "string"
@@ -61,7 +56,7 @@
               "type": "bool"
             }
           ],
-          "internalType": "struct Dto.Match",
+          "internalType": "struct Matches.Match",
           "name": "",
           "type": "tuple"
         }

@@ -5,6 +5,10 @@ import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import moment from 'moment';
 const { buildEddsa } = require("circomlibjs");
+import {
+    useQuery,
+    gql
+} from "@apollo/client";
 
 import styles from './matches.module.css'
 import { Matches } from '../../contracts'
@@ -13,8 +17,22 @@ import { useAlertContext } from '../../providers'
 import { Bets, Brazilian } from '../../contracts'
 import { genEcdhSharedKey } from '../../utils/encryption'
 
+const matchesQuery = gql`
+  query GetMatches {
+    champs {
+        id
+        matches {
+          id
+          house
+          visitor
+          start
+        }
+    }
+  }
+`;
+
 const MatchesDisplay: React.FC<{ logout: Function }> = ({ logout }) => {
-    const [matches, setmatches] = useState<any[]>([]);
+    const { data } = useQuery(matchesQuery);
     const [bet, setBet] = useState<boolean>(false);
     const [betWinner, setBetWinner] = useState<boolean>(false);
     const [betScore, setBetScore] = useState<boolean>(false);
@@ -150,39 +168,10 @@ const MatchesDisplay: React.FC<{ logout: Function }> = ({ logout }) => {
     }
 
     useEffect(() => {
-        const init = async () => {
-            try {
-                const championships = await Matches.getChampionships()
+        console.log(data);
 
-                const m: any[] = [];
+    }, [data])
 
-                await Promise.all(championships.map(async (c) => {
-                    if (!c.closed) {
-                        const champMatches = await Matches.getMatches(c.id)
-                        champMatches.forEach(cm => {
-                            if (!cm.closed && !cm.resultsFullfilled) {
-                                m.push({
-                                    championship: c.name,
-                                    champId: c.id,
-                                    matchId: cm.id,
-                                    house: cm.house,
-                                    visitor: cm.visitor,
-                                    start: cm.start,
-                                    season: c.season
-                                })
-                            }
-                        })
-                    }
-                }))
-
-                setmatches(m)
-            } catch (e) {
-                console.log(e)
-            }
-        }
-
-        init()
-    }, [])
 
     if (betWinner) {
         return (
@@ -370,25 +359,31 @@ const MatchesDisplay: React.FC<{ logout: Function }> = ({ logout }) => {
     return (
         <div className={styles.viewScroll}>
             <div className={styles.content}>
-                {matches.map((match, i) => {
-                    return (
-                        <Card key={i} className={styles.match}>
-                            <CardContent>
-                                <div className={styles.teams}>
-                                    <p>{match.house}</p>
-                                    vs
-                                    <p>{match.visitor}</p>
-                                </div>
-                                <p className={styles.date}>{`${moment.unix(match.start).format("dddd, MMMM Do YYYY, h:mm a")}`}</p>
-                            </CardContent>
-                            <CardActions>
-                                <Button label='BET' onClick={() => {
-                                    setBet(true)
-                                    setMatch(match)
-                                }} />
-                            </CardActions>
-                        </Card>
-                    )
+                {data && data.champs.map((champ: any, i: number) => {
+                    const matchesCards: any[] = [];
+
+                    champ.matches.forEach(({ id, ...m }: any) => {
+                        matchesCards.push(
+                            <Card key={i} className={styles.match}>
+                                <CardContent>
+                                    <div className={styles.teams}>
+                                        <p>{m.house}</p>
+                                        vs
+                                        <p>{m.visitor}</p>
+                                    </div>
+                                    <p className={styles.date}>{`${moment(Number(m.start)).format("dddd, MMMM Do YYYY, h:mm a")}`}</p>
+                                </CardContent>
+                                <CardActions>
+                                    <Button label='BET' onClick={() => {
+                                        setBet(true)
+                                        setMatch({ ...m, champId: champ.id, matchId: id })
+                                    }} />
+                                </CardActions>
+                            </Card>
+                        )
+                    })
+
+                    return matchesCards
                 })}
             </div>
         </div>
